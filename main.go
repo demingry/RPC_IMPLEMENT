@@ -15,6 +15,11 @@ func (r *Rabbit) Add(args Args, re *int) error {
 	return nil
 }
 
+func (r *Rabbit) Minus(args Args, re *int) error {
+	*re = args.Num1 - args.Num2
+	return nil
+}
+
 func main() {
 
 	addr := make(chan string)

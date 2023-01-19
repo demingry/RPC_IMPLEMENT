@@ -10,11 +10,13 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Server struct {
 	ServiceMap sync.Map
 	ServerList *Colony
+	*Monitor
 }
 
 func (s *Server) Register(instance interface{}) {
@@ -44,6 +46,9 @@ func (s *Server) findServiceAndMethod(request string) (*Service, *MethodType) {
 }
 
 func (s *Server) StartServer(addr chan string) {
+
+	s.Monitor = &Monitor{server: s}
+	go s.StartMonitor()
 
 	if listener, err := net.Listen("tcp", ":8080"); err == nil {
 		addr <- listener.Addr().String()
@@ -120,7 +125,7 @@ func (s *Server) Discover(object []*Single) {
 
 	s.ServerList = &Colony{mu: sync.Mutex{}}
 	s.ServerList.Update(object)
-	// go s.ServerList.HeartBeat(10 * time.Second)
+	go s.ServerList.HeartBeat(10 * time.Second)
 }
 
 func (s *Server) dispatch() *Single {

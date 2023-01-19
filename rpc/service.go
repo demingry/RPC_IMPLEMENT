@@ -54,6 +54,7 @@ func (s *Service) registerMethods() {
 func (s *Service) call(m *MethodType, argv, replyv reflect.Value) error {
 
 	f := m.method.Func
+	m.invoked++
 	returnvalue := f.Call([]reflect.Value{s.instance, argv, replyv})
 	if errInter := returnvalue[0].Interface(); errInter != nil {
 		return errInter.(error)
@@ -66,6 +67,7 @@ type MethodType struct {
 	method    reflect.Method
 	ArgType   reflect.Type
 	ReplyType reflect.Type
+	invoked   uint64
 }
 
 func (m *MethodType) newArgv() reflect.Value {
