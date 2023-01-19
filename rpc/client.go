@@ -30,14 +30,17 @@ func NewClient(addr string, deadline time.Duration) *Client {
 				options.Single.Address,
 				options.Single.Port), deadline); err == nil {
 				json.NewEncoder(conn).Encode(Options{Indicate: 1, CodecType: GobCodec})
-				if init, ok := InitCodecLists[options.CodecType]; ok {
-					codec := init(conn)
-					return &Client{
-						Codec:   codec,
-						Mu:      sync.Mutex{},
-						Pending: make(map[uint64]*Call),
-						Conn:    conn,
-						Closed:  true,
+				json.NewDecoder(conn).Decode(&options)
+				if options.Indicate == 1 {
+					if init, ok := InitCodecLists[options.CodecType]; ok {
+						codec := init(conn)
+						return &Client{
+							Codec:   codec,
+							Mu:      sync.Mutex{},
+							Pending: make(map[uint64]*Call),
+							Conn:    conn,
+							Closed:  true,
+						}
 					}
 				}
 			}

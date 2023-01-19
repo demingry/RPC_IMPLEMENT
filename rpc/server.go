@@ -3,12 +3,13 @@ package rpc
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net"
 	"os"
 	"reflect"
 	"strings"
 	"sync"
-	"time"
 )
 
 type Server struct {
@@ -70,6 +71,7 @@ func (s *Server) serveConn(conn net.Conn) {
 			json.NewEncoder(conn).Encode(&options)
 
 		} else if options.Indicate == 1 { //开始接受正式数据
+			json.NewEncoder(conn).Encode(&options)
 			break
 		} else { //不支持的Indicate码
 			fmt.Fprintf(os.Stderr, "[!]Negotiate with client indicate error\n")
@@ -78,11 +80,14 @@ func (s *Server) serveConn(conn net.Conn) {
 	}
 
 	codec := InitCodecLists[options.CodecType](conn)
+
 	for {
 
 		var h Header
 		if err := codec.ReadHeader(&h); err != nil {
-			fmt.Println(err.Error())
+			if err != io.EOF && err != io.ErrUnexpectedEOF {
+				log.Println(err.Error())
+			}
 			return
 		}
 
@@ -115,7 +120,7 @@ func (s *Server) Discover(object []*Single) {
 
 	s.ServerList = &Colony{mu: sync.Mutex{}}
 	s.ServerList.Update(object)
-	go s.ServerList.HeartBeat(10 * time.Second)
+	// go s.ServerList.HeartBeat(10 * time.Second)
 }
 
 func (s *Server) dispatch() *Single {

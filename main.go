@@ -2,7 +2,6 @@ package main
 
 import (
 	"rpc"
-	"sync"
 	"time"
 )
 
@@ -36,9 +35,7 @@ func main() {
 	defer client.Conn.Close()
 	go client.Receive()
 
-	wg := sync.WaitGroup{}
 	for i := 0; i < 5; i++ {
-		wg.Add(1)
 		call := new(rpc.Call)
 		call.Seq = uint64(i)
 		call.ServiceMethod = "Rabbit.Add"
@@ -46,9 +43,8 @@ func main() {
 
 		client.RegisterCall(call)
 		time.Sleep(800 * time.Millisecond)
-		wg.Done()
 	}
 
-	wg.Wait()
+	time.Sleep(3 * time.Second)
 
 }
