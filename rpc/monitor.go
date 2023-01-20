@@ -10,6 +10,8 @@ type Monitor struct {
 }
 
 func (m Monitor) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+
+	//服务调用数量
 	m.server.ServiceMap.Range(func(key, value any) bool {
 		service := value.(*Service)
 		fmt.Fprintf(w, "Service: %s\n", service.name)
@@ -19,6 +21,11 @@ func (m Monitor) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 		return true
 	})
+
+	//服务主机数量
+	m.server.ServerList.mu.Lock()
+	fmt.Fprintf(w, "Current servers: %d\n", len(m.server.ServerList.Single))
+	m.server.ServerList.mu.Unlock()
 }
 
 func (m *Monitor) StartMonitor() {
